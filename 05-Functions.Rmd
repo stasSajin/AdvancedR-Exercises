@@ -2,9 +2,7 @@
 title: "02-Subsetting"
 author: "Stas Sajin"
 date: "`r Sys.Date()"
-output:
-  md_document:
-    variant: markdown_github
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -140,4 +138,3 @@ df[firstPosition:lastPosition,]
 
 ### 10. How could you put the columns in a data frame in alphabetical order?
 I would use something along the lines: `names(df) <- order(names(df))`
-
