@@ -1,0 +1,17 @@
+---
+title: "07-OO Environments"
+author: "Stas Sajin"
+date: "`r Sys.Date()"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pryr)
+library(ggplot2)
+```
+
+
+
