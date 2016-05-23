@@ -1,0 +1,71 @@
+---
+title: "02-OO Essentials"
+author: "Stas Sajin"
+date: "`r Sys.Date()"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(pryr)
+```
+
+
+### 1. Read the source code for t() and t.test() and confirm that t.test() is an S3 generic and not an S3 method. What happens if you create an object with class test and call t() with it?
+
+```{r}
+#let's confirm that the two functions are S3 generic
+ftype(t)
+ftype(t.test)
+
+#create a vector t object
+myTestObject2 <- structure(1:5, class = "test")
+t(myTestObject2)
+
+#it executes a t.test on the observations within the vector.
+```
+
+### 2. What classes have a method for the Math group generic in base R? Read the source code. How do the methods work?
+
+### 3. R has two classes for representing date time data, POSIXct and POSIXlt, which both inherit from POSIXt. Which generics have different behaviours for the two classes? Which generics share the same behaviour?
+
+### 4. Which base generic has the greatest number of defined methods?
+
+### 5. UseMethod() calls methods in a special way. Predict what the following code will return, then run it and read the help for UseMethod() to figure out what's going on. Write down the rules in the simplest form possible.
+
+```{r}
+y <- 1
+g <- function(x) {
+  y <- 2
+  UseMethod("g")
+}
+g.numeric <- function(x) y
+g(10)
+
+h <- function(x) {
+  x <- 10
+  UseMethod("h")
+}
+h.character <- function(x) paste("char", x)
+h.numeric <- function(x) paste("num", x)
+
+h("a")
+```
+
+
+### 6. Internal generics don't dispatch on the implicit class of base types. Carefully read ?"internal generic" to determine why the length of f and g is different in the example below. What function helps distinguish between the behaviour of f and g?
+
+```{r}
+f <- function() 1
+g <- function() 2
+class(g) <- "function"
+
+class(f)
+class(g)
+
+length.function <- function(x) "function"
+length(f)
+length(g)
+```
