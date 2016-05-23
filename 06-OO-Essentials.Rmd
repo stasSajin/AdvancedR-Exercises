@@ -54,11 +54,25 @@ intersect(XctFunctions, XltFunctions)
 ```
 
 ### 4. Which base generic has the greatest number of defined methods?
+```{r}
+#get list of functions in the base environment
+objs <- mget(ls("package:base"), inherits = TRUE)
+baseFunctions <- Filter(is.function, objs)
 
+is.generic <- function(x) {
+    is.element("generic",ftype(x))
+}
+
+generics<-Filter(is.generic,baseFunctions)
+
+numMethods <- sapply(names(generics),function(x) length(methods(x)))
+which.max(numMethods)
+```
 
 ### 5. UseMethod() calls methods in a special way. Predict what the following code will return, then run it and read the help for UseMethod() to figure out what's going on. Write down the rules in the simplest form possible.
 
 ```{r}
+#this should come up to 2, because the y is executed inside the function g and not in the global environment
 y <- 1
 g <- function(x) {
   y <- 2
@@ -67,6 +81,7 @@ g <- function(x) {
 g.numeric <- function(x) y
 g(10)
 
+#this should show "char a" because the base h invokes the character method. If you execute something like `(h1)`, it will pass it to the numeric method and the ouput should be `num 1`.
 h <- function(x) {
   x <- 10
   UseMethod("h")
@@ -91,4 +106,6 @@ class(g)
 length.function <- function(x) "function"
 length(f)
 length(g)
+
+#not sure what the answer is to this one.
 ```
