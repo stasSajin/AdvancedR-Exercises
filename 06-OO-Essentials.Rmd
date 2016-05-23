@@ -109,3 +109,24 @@ length(g)
 
 #not sure what the answer is to this one.
 ```
+
+
+#####I'll have to work on some of these problems a bit later as they are a bit beyond me.
+
+### 7. Which S4 generic has the most methods defined for it? Which S4 class has the most methods associated with it?
+
+### 8. What happens if you define a new S4 class that doesn't "contain" an existing class? (Hint: read about virtual classes in ?Classes.)
+
+### 9. What happens if you pass an S4 object to an S3 generic? What happens if you pass an S3 object to an S4 generic? (Hint: read ?setOldClass for the second case.)
+
+### 10. Use a field function to prevent the account balance from being directly manipulated. (Hint: create a "hidden" .balance field, and read the help for the fields argument in setRefClass().)
+
+### 11. I claimed that there aren't any RC classes in base R, but that was a bit of a simplification. Use getClasses() and find which classes extend() from envRefClass. What are the classes used for? (Hint: recall how to look up the documentation for a class.)
+
+```{r}
+allClasses <- getClasses()
+ext <- names(which(sapply(allClasses, function(x) extends(x,'envRefClass'))))
+ext
+
+#these classes implement basic reference style semantics for R objects.
+```
