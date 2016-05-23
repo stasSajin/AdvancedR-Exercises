@@ -28,7 +28,13 @@ t(myTestObject2)
 ```
 
 ### 2. What classes have a method for the Math group generic in base R? Read the source code. How do the methods work?
+```{r}
+#?methods
+#these are the classes???
+methods("Math")
 
+#the Math isn't really a function but represents a group of generic functions (e.g., +,-, sin, cos) that are supplied to other functions. Allows for the creation of more complex objects. 
+```
 ### 3. R has two classes for representing date time data, POSIXct and POSIXlt, which both inherit from POSIXt. Which generics have different behaviours for the two classes? Which generics share the same behaviour?
 
 ### 4. Which base generic has the greatest number of defined methods?
