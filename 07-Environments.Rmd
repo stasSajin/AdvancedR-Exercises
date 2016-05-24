@@ -176,7 +176,8 @@ strModified(mean)
 
 
 ### 13. What does this function do? How does it differ from <<- and why might you prefer it?
-```{r}
+This function looks up the specified name functions and then binds a new value to them. If it does not find the function, it does not automatically create a function in the global environment like the function assign() does. Instead, it simply stops execution. This can be useful if you want to modify a variable that already exists. 
+```{r, eval=FALSE}
 rebind <- function(name, value, env = parent.frame()) {
   if (identical(env, emptyenv())) {
     stop("Can't find ", name, call. = FALSE)
@@ -195,6 +196,15 @@ a
 ```
 
 ### 14. Create a version of assign() that will only bind new names, never re-bind old names. Some programming languages only do this, and are known as single assignment languages.
+```{r}
+assignModified<- function(name, value, env = parent.frame()) {
+    if (exists(name, envir = env, inherits = FALSE)) {
+    stop("Name already exists ", call. = FALSE)
+  } else {
+    assign(name, value, env)
+  }
+}
+```
 
 ### 15. Write an assignment function that can do active, delayed, and locked bindings. What might you call it? What arguments should it take? Can you guess which sort of assignment it should do based on the input?
-
+I'll work on this one a bit later
