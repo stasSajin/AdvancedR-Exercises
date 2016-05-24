@@ -14,3 +14,74 @@ library(pryr)
 
 
 
+### 1. List three ways in which an environment differs from a list.
+* Environments are hierarchically structured, meaning that they have parent and children anvironments. List don't have that structure.
+* The objects in an environment have unique names, which is not true for lists
+* In lists, you can remove an object by setting it to NULL, in an environment, setting an entry to NULL will create a new binding to NULL
+* To compare environments, you should use `identical()` rather than `==`.
+
+### 2. If you don't supply an explicit environment, where do ls() and rm() look? Where does <- make bindings?
+It first looks in the environment you are currently in. After that it moves up the hierarchy if nothing is found in the lower level environments. 
+
+### 3. Using parent.env() and a loop (or a recursive function), verify that the ancestors of globalenv() include baseenv() and emptyenv(). Use the same basic idea to implement your own version of search().
+```{r}
+e<-globalenv()
+while(environmentName(e) !="R_EmptyEnv") {
+    e<-parent.env(e)
+    cat(str(e, give.attr=FALSE))
+}
+```
+
+### 4. Modify where() to find all environments that contain a binding for name.
+
+### 5. Write your own version of get() using a function written in the style of where().
+
+### 6. Write a function called fget() that finds only function objects. It should have two arguments, name and env, and should obey the regular scoping rules for functions: if there's an object with a matching name that's not a function, look in the parent. For an added challenge, also add an inherits argument which controls whether the function recurses up the parents or only looks in one environment.
+
+### 7. Write your own version of exists(inherits = FALSE) (Hint: use ls().) Write a recursive version that behaves like exists(inherits = TRUE).
+
+### 8. List the four environments associated with a function. What does each one do? Why is the distinction between enclosing and binding environments particularly important?
+
+### 9. Draw a diagram that shows the enclosing environments of this function:
+```{r}
+f1 <- function(x1) {
+  f2 <- function(x2) {
+    f3 <- function(x3) {
+      x1 + x2 + x3
+    }
+    f3(3)
+  }
+  f2(2)
+}
+f1(1)
+```
+
+### 10. Expand your previous diagram to show function bindings.
+
+### 11. Expand it again to show the execution and calling environments.
+
+### 12. Write an enhanced version of str() that provides more information about functions. Show where the function was found and what environment it was defined in.
+
+### 13. What does this function do? How does it differ from <<- and why might you prefer it?
+```{r}
+rebind <- function(name, value, env = parent.frame()) {
+  if (identical(env, emptyenv())) {
+    stop("Can't find ", name, call. = FALSE)
+  } else if (exists(name, envir = env, inherits = FALSE)) {
+    assign(name, value, envir = env)
+  } else {
+    rebind(name, value, parent.env(env))
+  }
+}
+rebind("a", 10)
+#> Error: Can't find a
+a <- 5
+rebind("a", 10)
+a
+#> [1] 10
+```
+
+### 14. Create a version of assign() that will only bind new names, never re-bind old names. Some programming languages only do this, and are known as single assignment languages.
+
+### 15. Write an assignment function that can do active, delayed, and locked bindings. What might you call it? What arguments should it take? Can you guess which sort of assignment it should do based on the input?
+
