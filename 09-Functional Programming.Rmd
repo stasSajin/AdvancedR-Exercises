@@ -27,7 +27,7 @@ lapply(mtcars, function(x) sd(x)/mean(x))
 ### 3. Use integrate() and an anonymous function to find the area under the curve for the following functions. Use Wolfram Alpha to check your answers.
 
 1. y = x ^ 2 - x, x in [0, 10]
-2. y = sin(x) + cos(x), x in [-??, ??]
+2. y = sin(x) + cos(x), x in [-pi, pi]
 3. y = exp(x) / x, x in [10, 20]
 
 ```{r}
@@ -45,8 +45,11 @@ It sould be beneficial to create a named function for standard error. Other than
 
 
 ### 5. Why are functions created by other functions called closures?
+Closures enclose the environment of a parent function and access all of its variables. 
 
 ### 6. What does the following statistical function do? What would be a better name for it? (The existing name is a bit of a hint.)
+
+The formula `(x^lambda-1)/lambda` is for Box-Cox transformation. This function will return a function that that either returns the log or computes the box-cox transform. 
 ```{r}
 bc <- function(lambda) {
   if (lambda == 0) {
@@ -58,22 +61,36 @@ bc <- function(lambda) {
 ```
 
 ### 7. What does approxfun() do? What does it return?
+According to the documentation: "Returns a list of points which linearly interpolate given data points, or a function performing the linear (or constant) interpolation.""
 
 ### 8. What does ecdf() do? What does it return?
+Documentation: "Computes an empirical cumulative distribution function, with several methods for plotting, printing and computing with such an "ecdf" object."
 
 ### 9. Create a function that creates functions that compute the ith central moment of a numeric vector. You can test it by running the following code:
 ```{r}
+#here is the function
+moment<-function(momentOrder) {
+    function (x) (sum((x-mean(x))^momentOrder)/length(x))
+}
+
 m1 <- moment(1)
 m2 <- moment(2)
+
+unenclose(m1)
+unenclose(m2)
 
 x <- runif(100)
 stopifnot(all.equal(m1(x), 0))
 stopifnot(all.equal(m2(x), var(x) * 99 / 100))
+#all tests have passed
 ```
 
 ### 10. Create a function pick() that takes an index, i, as an argument and returns a function with an argument x that subsets x with i.
 
 ```{r}
+#here is the solution:
+pick <- function(i) { function(x) x[[i]] }
+
 lapply(mtcars, pick(5))
 # should do the same as this
 lapply(mtcars, function(x) x[[5]])
@@ -83,11 +100,11 @@ lapply(mtcars, function(x) x[[5]])
 ### 11. Implement a summary function that works like base::summary(), but uses a list of functions. Modify the function so it returns a closure, making it possible to use it as a function factory.
 
 ### 12. Which of the following commands is equivalent to with(x, f(z))?
-a. x$f(x$z).
-b. f(x$z).
-c. x$f(z).
-d. f(z).
-e. It depends.
+1. x$f(x$z).
+2. f(x$z).
+3. x$f(z).
+4. f(z).
+5. It depends.
 
 ### 13. Instead of creating individual functions (e.g., midpoint(), trapezoid(), simpson(), etc.), we could store them in a list. If we did that, how would that change the code? Can you create the list of functions from a list of coefficients for the Newton-Cotes formulae?
 
