@@ -41,7 +41,7 @@ integrate(function(x) exp(x) / x, 10, 20)
 
 ### 4. A good rule of thumb is that an anonymous function should fit on one line and shouldn't need to use {}. Review your code. Where could you have used an anonymous function instead of a named function? Where should you have used a named function instead of an anonymous function?
 
-
+It sould be beneficial to create a named function for standard error. Other than that, we don't really have a need to use anonymous functions for integration because we could just replace the x values with the lower and upper bound we are integrating on. 
 
 
 ### 5. Why are functions created by other functions called closures?
