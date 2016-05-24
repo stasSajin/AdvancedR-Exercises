@@ -125,6 +125,16 @@ existsModified('fget')
 ```
 
 ### 8. List the four environments associated with a function. What does each one do? Why is the distinction between enclosing and binding environments particularly important?
+These are from the book:
+
+* Enclosing: The enclosing environment is the environment where the function was created. Every function has one and only one enclosing environment. The enclosing environment is important for lexical scoping. 
+* Binding: Binding a function to a name with <- defines a binding environment.
+* Execution: Calling a function creates an ephemeral execution environment that stores variables created during execution.
+* Calling: Every execution environment is associated with a calling environment, which tells you where the function was called.
+
+If you assign a function to a different environemnt other than the enclosing environment, the enclosing environment determines how the function finds values; the binding environments determine how we find the function. This is from the book: "The distinction between the binding environment and the enclosing environment is important for package namespaces. Package namespaces keep packages independent. For example, if package A uses the base mean() function, what happens if package B creates its own mean() function? Namespaces ensure that package A continues to use the base mean() function, and that package A is not affected by package B (unless explicitly asked for)." 
+
+You might find this issue when using the dplyr and plyr packages at the same time, where the function summarise in each package was slightly different.
 
 ### 9. Draw a diagram that shows the enclosing environments of this function:
 ```{r}
@@ -138,13 +148,32 @@ f1 <- function(x1) {
   f2(2)
 }
 f1(1)
+
+#not done yet
 ```
 
 ### 10. Expand your previous diagram to show function bindings.
+Need to do.
 
 ### 11. Expand it again to show the execution and calling environments.
+Need to do.
 
 ### 12. Write an enhanced version of str() that provides more information about functions. Show where the function was found and what environment it was defined in.
+
+```{r}
+strModified<- function(name) {
+    name <- deparse(substitute(name))
+    list(
+        functionname = name,
+        callEnviron = parent.frame(),
+        enclosEnviron = get(name, parent.env(environment()))
+        )
+}
+
+strModified(mean)
+```
+
+
 
 ### 13. What does this function do? How does it differ from <<- and why might you prefer it?
 ```{r}
