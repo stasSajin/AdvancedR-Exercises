@@ -1,22 +1,6 @@
----
-title: "08-Debugging"
-author: "Stas Sajin"
-date: "`r Sys.Date()"
-output:
-  md_document:
-    variant: markdown_github
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(pryr)
-```
-
-
-
 ### 1. Compare the following two implementations of message2error(). What is the main advantage of withCallingHandlers() in this scenario? (Hint: look carefully at the traceback.)
 
-```{r, eval=FALSE}
+``` r
 message2error <- function(code) {
   withCallingHandlers(code, message = function(e) stop(e))
 }
@@ -48,8 +32,9 @@ message2error(someCode)
 #the traceback for the second option seems to have more statements. I'm not sure why. 
 ```
 
-### 2. The goal of the col_means() function defined below is to compute the means of all numeric columns in a data frame.
-```{r, eval=FALSE}
+### 2. The goal of the col\_means() function defined below is to compute the means of all numeric columns in a data frame.
+
+``` r
 col_means <- function(df) {
   numeric <- sapply(df, is.numeric)
   numeric_cols <- df[, numeric]
@@ -72,9 +57,9 @@ mtcars2[-1] <- lapply(mtcars2[-1], as.character)
 col_means(mtcars2) #this returns row means
 ```
 
-Define a correct function. It seems like all the above issues could be fixed by asking the user to include a dataframe as input. Could not solve it alone initially, so used https://github.com/peterhurford/adv-r-book-solutions/blob/master/07_debugging/exercise2.R
+Define a correct function. It seems like all the above issues could be fixed by asking the user to include a dataframe as input. Could not solve it alone initially, so used <https://github.com/peterhurford/adv-r-book-solutions/blob/master/07_debugging/exercise2.R>
 
-```{r}
+``` r
 col_means2 <- function(df) {
   if (!is.data.frame(df)) stop("Input must be a data frame")
   if (0 %in% dim(df)) {
@@ -86,12 +71,11 @@ col_means2 <- function(df) {
   numeric_cols <- df[, numeric, drop = FALSE]
   data.frame(lapply(numeric_cols, mean))
 }
-
 ```
 
 ### 3. The following function "lags" a vector, returning a version of x that is n values behind the original. Improve the function so that it (1) returns a useful error message if n is not a vector, and (2) has reasonable behaviour when n is 0 or longer than x.
 
-```{r}
+``` r
 lag <- function(x, n = 1L) {
   if (!is.numeric(n) | length(n) != 1) 
       stop('n must be a numeric vector with at least length 1.')
