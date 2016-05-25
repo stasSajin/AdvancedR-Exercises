@@ -53,11 +53,11 @@ lapply(formulas, lm, data = mtcars)
 
 
 #using loops
-output <- vector('list', length(formulas))
+output2 <- vector('list', length(formulas))
 for (i in seq_along(formulas)) { 
-    output[[i]] <- lm(formulas[[i]], data = mtcars)
+    output2[[i]] <- lm(formulas[[i]], data = mtcars)
 }
-output
+output2
 ```
 
 
@@ -86,7 +86,7 @@ outputBoot
 ```{r}
 rsq <- function(mod) summary(mod)$r.squared
 
-unlist(lapply(output, rsq))
+unlist(lapply(output2, rsq))
 unlist(lapply(outputBoot, rsq))
 ```
 
@@ -128,7 +128,7 @@ sapply(trials, `[[`, "p.value")
 ### 9. What does replicate() do? What sort of for loop does it eliminate? Why do its arguments differ from lapply() and friends?
 
 ```{r}
-?replicate()
+#?replicate()
 
 ##from documentation: "replicate is a wrapper for the common use of sapply for repeated evaluation of an expression (which will usually involve random number generation)."
 
@@ -251,9 +251,20 @@ Any <- function(x) {
 
 ### 22. Implement `arg_max()`. It should take a function and a vector of inputs, and return the elements of the input where the function returns the highest value. For example, `arg_max(-10:5, function(x) x ^ 2)` should return `-10. arg_max(-5:5, function(x) x ^ 2)` should return `c(-5, 5)`. Also implement the matching `arg_min()` function.
 
+```{r}
+arg_max <- function(x, FUN) {
+   FUN.x <- vapply(x, FUN, numeric(1))
+   x[which(FUN.x == max(FUN.x))]
+}
+```
+
 ### 23. Challenge: read about the [fixed point algorithm](https://mitpress.mit.edu/sicp/full-text/book/book-Z-H-12.html#%_sec_1.3). Complete the exercises using R.
+beyond me right now
+
 
 ### 24. Implement smaller and larger functions that, given two inputs, return either the smaller or the larger value. Implement na.rm = TRUE: what should the identity be? (Hint: smaller(x, smaller(NA, NA, na.rm = TRUE), na.rm = TRUE) must be x, so smaller(NA, NA, na.rm = TRUE) must be bigger than any other value of x.) Use smaller and larger to implement equivalents of min(), max(), pmin(), pmax(), and new functions `row_min()` and `row_max()`.
+
+
 
 ### 25. Create a table that has and, or, add, multiply, smaller, and larger in the columns and binary operator, reducing variant, vectorised variant, and array variants in the rows.
 
