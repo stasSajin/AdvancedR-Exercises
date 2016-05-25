@@ -68,7 +68,7 @@ Documentation: "Computes an empirical cumulative distribution function, with sev
 
 ### 9. Create a function that creates functions that compute the ith central moment of a numeric vector. You can test it by running the following code:
 ```{r}
-#here is the function
+#here is the function; You can find more about the formula here: http://www.r-tutor.com/elementary-statistics/numerical-measures/moment
 moment<-function(momentOrder) {
     function (x) (sum((x-mean(x))^momentOrder)/length(x))
 }
@@ -99,6 +99,25 @@ lapply(mtcars, function(x) x[[5]])
 
 ### 11. Implement a summary function that works like base::summary(), but uses a list of functions. Modify the function so it returns a closure, making it possible to use it as a function factory.
 
+```{r}
+#most of this code has already been showcased in the book.
+
+make_summary <- function(funs) {
+  function(x) {
+    lapply(funs, function(sf) sf(x))
+  }
+}
+
+summaryFuns <- c(mean, median, sd, mad, IQR)
+summary2 <- make_summary(summaryFuns)
+summary2(1:10)
+
+#it does not show the same, so here is a changed version
+summaryFuns <- list('min' = min, 'median' = median, 'mean' = mean, 'max' = max)
+summary2 <- make_summary(summaryFuns)
+summary2(1:10)
+```
+
 ### 12. Which of the following commands is equivalent to with(x, f(z))?
 1. x$f(x$z).
 2. f(x$z).
@@ -106,6 +125,10 @@ lapply(mtcars, function(x) x[[5]])
 4. f(z).
 5. It depends.
 
+Answer: x$f(x$z); 
+
 ### 13. Instead of creating individual functions (e.g., midpoint(), trapezoid(), simpson(), etc.), we could store them in a list. If we did that, how would that change the code? Can you create the list of functions from a list of coefficients for the Newton-Cotes formulae?
+
+
 
 ### 14. The trade-off between integration rules is that more complex rules are slower to compute, but need fewer pieces. For sin() in the range [0, ??], determine the number of pieces needed so that each rule will be equally accurate. Illustrate your results with a graph. How do they change for different functions? sin(1 / x^2) is particularly challenging.
