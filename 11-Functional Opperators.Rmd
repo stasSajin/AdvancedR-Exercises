@@ -1,0 +1,180 @@
+---
+title: "Functional Operators"
+author: "Stas Sajin"
+date: "`r Sys.Date()"
+output:
+  md_document:
+    variant: markdown_github
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load the following libraries
+```{r}
+pacman::p_load(memoise,plyr,pryr,microbenchmark)
+```
+
+
+# 1.Write a FO that logs a time stamp and message to a file every time a function is run.
+
+```{r}
+foExample <- function(f, file) {
+  function(x, ...) {
+    #store time
+    time <- as.character(Sys.time())
+    #append the time and messagte to a file
+    cat("The time is ", time, "\n", sep = "", file=filename, append=TRUE)
+  }
+}
+```
+
+
+# 2. What does the following function do? What would be a good name for it?
+```{r}
+f <- function(g) {
+  force(g)
+  result <- NULL
+  function(...) {
+    if (is.null(result)) {
+      result <<- g(...)
+    }
+    result
+  }
+}
+runif2 <- f(runif)
+runif2(6)
+#> [1] 0.9740204 0.1269874 0.2954060 0.2944669 0.6048259
+runif2(5)
+#> [1] 0.9740204 0.1269874 0.2954060 0.2944669 0.6048259
+```
+
+The function above stores the previously generated random numbers and then gives those numbers as the output when you call the function again. Note that the function esentially checks to see if there is a results stored already, and only runs when there is a NULL in the output for the result. A goof name might be: first_random_numbers
+
+
+# 3. Modify delay_by() so that instead of delaying by a fixed amount of time, it ensures that a certain amount of time has elapsed since the function was last called. That is, if you called g <- delay_by(1, f); g(); Sys.sleep(2); g() there shouldn't be an extra delay.
+
+The question might be a bit confusing, but what it is really asking is basically to memoise a function so that it stores the time when it was run. For instance, in the example given by Hadley `g <- delay_by(1, f); g(); Sys.sleep(2); g()`, there should be only a 3 second delay when you call g() the second time around rather than a 2 second delay. 
+
+```{r}
+delay_by <- function(delay, f) {
+  force(f);
+  #time when the last call was made
+  last_time<- as.numeric(Sys.time())
+  function(...) {
+    #time for current call
+    now_time <- as.numeric(Sys.time())
+    delay <- delay + last_time - now_time
+    if (delay > 0) {
+        Sys.sleep(delay)
+    }
+    last_time <<- as.numeric(Sys.time()) 
+    f(...)
+  }
+}
+
+#testing 
+f <- function(x = 1) rnorm(x)
+system.time({ g <- delay_by(1, f); g(); Sys.sleep(2); g() })
+# 3 sec
+system.time({ g <- delay_by(1, f); g(); g() })
+# 2 sec
+```
+
+
+# 4. Write wait_until() which delays execution until a specific time.
+```{r}
+wait_until <- function(wait_time, f) {
+  delay <- as.numeric(wait_time) - as.numeric(Sys.time())
+  force(f)
+  function(...) {
+    if (delay > 0) {
+      cat('Wait', delay, 'seconds more before the function executes.\n')
+      Sys.sleep(delay)
+      print("Hurray!!! The function executed")
+    }
+    f(...)
+  }
+}
+
+time <- as.POSIXct("12:44:00", format = "%H:%M:%S")
+h <- wait_until(time, Sys.time)
+h()
+```
+
+
+
+# 5. There are three places we could have added a memoise call: why did we choose the one we did?
+
+```{r}
+download <- memoise(dot_every(10, delay_by(1, download_file)))
+download <- dot_every(10, memoise(delay_by(1, download_file)))
+download <- dot_every(10, delay_by(1, memoise(download_file)))
+```
+
+There is no point in using a delay_by if you are first memoiseing all the files that you want to download, since this will simply download all the files without a delay; so the third choice is not appropriate. 
+
+The first choice also seems weird since it does not account for unique downloads and only memories how many files were downloaded. 
+
+
+# 6. Why is the remember() function inefficient? How could you implement it in more efficient way?
+
+The function is inefficient because it recomputed the list whenever the function was run again (the function is runtime inefficient, but it is memory efficient). A way to make it more efficient is to use pre-allocation. 
+
+
+# 7. Why does the following code, from stackoverflow, not do what you expect? How can you modify f so that it works correctly?
+
+It's because of lazy evaluation; You need to force the parameters a,b
+```{r}
+# return a linear function with slope a and intercept b.
+f <- function(a, b) {
+    force(a);
+    force(b);
+    function(x) {
+        a * x + b
+    }
+}
+# create a list of functions with different parameters.
+fs <- Map(f, a = c(0, 1), b = c(0, 1))
+
+fs[[1]](3)
+#> [1] 0
+# should return 0 * 3 + 0 = 0
+```
+
+# **Set 2 Exercises**
+
+# 1. Create a negative() FO that flips the sign of the output of the function to which it is applied.
+```{r}
+
+```
+
+# 2. The evaluate package makes it easy to capture all the outputs (results, text, messages, warnings, errors, and plots) from an expression. Create a function like capture_it() that also captures the warnings and errors generated by a function.
+
+# 3. Create a FO that tracks files created or deleted in the working directory (Hint: use dir() and setdiff().) What other global effects of functions might you want to track?
+
+# **Set 3 Exercises**
+
+# 1. Our previous download() function only downloads a single file. How can you use partial() and lapply() to create a function that downloads multiple files at once? What are the pros and cons of using partial() vs. writing a function by hand?
+
+# 2. Read the source code for plyr::colwise(). How does the code work? What are colwise()'s three main tasks? How could you make colwise() simpler by implementing each task as a function operator? (Hint: think about partial().)
+
+# 3. Write FOs that convert a function to return a matrix instead of a data frame, or a data frame instead of a matrix. If you understand S3, call them as.data.frame.function() and as.matrix.function().
+
+# 4. You've seen five functions that modify a function to change its output from one form to another. What are they? Draw a table of the various combinations of types of outputs: what should go in the rows and what should go in the columns? What function operators might you want to write to fill in the missing cells? Come up with example use cases.
+
+# 5. Look at all the examples of using an anonymous function to partially apply a function in this and the previous chapter. Replace the anonymous function with partial(). What do you think of the result? Is it easier or harder to read?
+
+
+# **Set 4 Exercises**
+
+# 1. Implement your own version of compose() using Reduce and %o%. For bonus points, do it without calling function.
+
+# 2. Extend and() and or() to deal with any number of input functions. Can you do it with Reduce()? Can you keep them lazy (e.g., for and(), the function returns once it sees the first FALSE)?
+
+# 3. Implement the xor() binary operator. Implement it using the existing xor() function. Implement it as a combination of and() and or(). What are the advantages and disadvantages of each approach? Also think about what you'll call the resulting function to avoid a clash with the existing xor() function, and how you might change the names of and(), not(), and or() to keep them consistent.
+
+# 4. Above, we implemented boolean algebra for functions that return a logical function. Implement elementary algebra (plus(), minus(), multiply(), divide(), exponentiate(), log()) for functions that return numeric vectors.
+
+
