@@ -107,7 +107,7 @@ h()
 
 # 5. There are three places we could have added a memoise call: why did we choose the one we did?
 
-```{r}
+```{r, eval=FALSE}
 download <- memoise(dot_every(10, delay_by(1, download_file)))
 download <- dot_every(10, memoise(delay_by(1, download_file)))
 download <- dot_every(10, delay_by(1, memoise(download_file)))
@@ -240,15 +240,106 @@ Vectorize, colwise, as.data.frame.function, as.matrix.function, splat
 
 # 5. Look at all the examples of using an anonymous function to partially apply a function in this and the previous chapter. Replace the anonymous function with partial(). What do you think of the result? Is it easier or harder to read?
 
+```{r}
+funs2 <- list(
+  sum = partial(sum, na.rm = TRUE),
+  mean = partial(mean, na.rm = TRUE),
+  median = partial(median, na.rm = TRUE)
+)
+
+#not sure how to approach this one for now
+```
+
 
 # **Set 4 Exercises**
 
 # 1. Implement your own version of compose() using Reduce and %o%. For bonus points, do it without calling function.
+```{r}
+"%o%" <- compose
+compose2 <- partial(Reduce, f = `%o%`)
+
+#the answer should be 2; the right-most function is applied first
+compose2(c(sqrt,mean))(4,4,4,4)
+
+sqrt(mean(4,4,4,4))
+
+(sqrt %o% mean)(4,4,4,4)
+```
 
 # 2. Extend and() and or() to deal with any number of input functions. Can you do it with Reduce()? Can you keep them lazy (e.g., for and(), the function returns once it sees the first FALSE)?
 
+Not sure how
+
 # 3. Implement the xor() binary operator. Implement it using the existing xor() function. Implement it as a combination of and() and or(). What are the advantages and disadvantages of each approach? Also think about what you'll call the resulting function to avoid a clash with the existing xor() function, and how you might change the names of and(), not(), and or() to keep them consistent.
+
+```{r}
+#implementing %xor% using the exis
+`%xor%` <- function(x, y) {
+    xor(x, y)
+}
+
+#the xor function evaluated to true whenever x or y are dissimilar.
+TRUE %xor% TRUE 
+TRUE %xor% FALSE
+FALSE %xor% TRUE
+FALSE %xor% FALSE
+
+#passes all tests
+
+
+#implementing is as a combination of x and y
+and <- function(f1, f2) {
+    f1 && f2
+}
+
+or <- function(f1, f2) {
+    f1 || f2
+}
+
+`%xor2%`  <- function(f1, f2) {
+    or(f1, f2) & !and(f1, f2)
+}
+
+#the xor function evaluated to true whenever x or y are dissimilar.
+TRUE %xor2% TRUE 
+TRUE %xor2% FALSE
+FALSE %xor2% TRUE
+FALSE %xor2% FALSE
+```
+
 
 # 4. Above, we implemented boolean algebra for functions that return a logical function. Implement elementary algebra (plus(), minus(), multiply(), divide(), exponentiate(), log()) for functions that return numeric vectors.
 
+```{r}
+plus <- function(f1, f2) {
+  force(f1); force(f2)
+  function(...) {
+    f1(...) + f2(...)
+  }
+}
+
+plus(mean, mean)(4,4,4,4)
+
+#minus
+minus <- function(f1, f2) {
+  force(f1); force(f2)
+  function(...) {
+    f1(...) - f2(...)
+  }
+}
+
+minus(mean, mean)(4,4,4,4)
+
+#multiply
+multiply <- function(f1, f2) {
+  force(f1); force(f2)
+  function(...) {
+    f1(...) * f2(...)
+  }
+}
+
+multiply(mean, mean)(4,4,4,4)
+
+#etc...
+```
 

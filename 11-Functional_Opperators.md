@@ -1,0 +1,472 @@
+Load the following libraries
+
+``` r
+pacman::p_load(memoise,plyr,pryr,microbenchmark)
+```
+
+1.Write a FO that logs a time stamp and message to a file every time a function is run.
+=======================================================================================
+
+``` r
+foExample <- function(f, file) {
+  function(x, ...) {
+    #store time
+    time <- as.character(Sys.time())
+    #append the time and messagte to a file
+    cat("The time is ", time, "\n", sep = "", file=filename, append=TRUE)
+  }
+}
+```
+
+2. What does the following function do? What would be a good name for it?
+=========================================================================
+
+``` r
+f <- function(g) {
+  force(g)
+  result <- NULL
+  function(...) {
+    if (is.null(result)) {
+      result <<- g(...)
+    }
+    result
+  }
+}
+runif2 <- f(runif)
+runif2(6)
+```
+
+    ## [1] 0.77351788 0.03535409 0.55768214 0.26578941 0.46837029 0.67612214
+
+``` r
+#> [1] 0.9740204 0.1269874 0.2954060 0.2944669 0.6048259
+runif2(5)
+```
+
+    ## [1] 0.77351788 0.03535409 0.55768214 0.26578941 0.46837029 0.67612214
+
+``` r
+#> [1] 0.9740204 0.1269874 0.2954060 0.2944669 0.6048259
+```
+
+The function above stores the previously generated random numbers and then gives those numbers as the output when you call the function again. Note that the function esentially checks to see if there is a results stored already, and only runs when there is a NULL in the output for the result. A goof name might be: first\_random\_numbers
+
+3. Modify delay\_by() so that instead of delaying by a fixed amount of time, it ensures that a certain amount of time has elapsed since the function was last called. That is, if you called g &lt;- delay\_by(1, f); g(); Sys.sleep(2); g() there shouldn't be an extra delay.
+===============================================================================================================================================================================================================================================================================
+
+The question might be a bit confusing, but what it is really asking is basically to memoise a function so that it stores the time when it was run. For instance, in the example given by Hadley `g <- delay_by(1, f); g(); Sys.sleep(2); g()`, there should be only a 3 second delay when you call g() the second time around rather than a 2 second delay.
+
+``` r
+delay_by <- function(delay, f) {
+  force(f);
+  #time when the last call was made
+  last_time<- as.numeric(Sys.time())
+  function(...) {
+    #time for current call
+    now_time <- as.numeric(Sys.time())
+    delay <- delay + last_time - now_time
+    if (delay > 0) {
+        Sys.sleep(delay)
+    }
+    last_time <<- as.numeric(Sys.time()) 
+    f(...)
+  }
+}
+
+#testing 
+f <- function(x = 1) rnorm(x)
+system.time({ g <- delay_by(1, f); g(); Sys.sleep(2); g() })
+```
+
+    ##    user  system elapsed 
+    ##    0.00    0.00    2.99
+
+``` r
+# 3 sec
+system.time({ g <- delay_by(1, f); g(); g() })
+```
+
+    ##    user  system elapsed 
+    ##       0       0       2
+
+``` r
+# 2 sec
+```
+
+4. Write wait\_until() which delays execution until a specific time.
+====================================================================
+
+``` r
+wait_until <- function(wait_time, f) {
+  delay <- as.numeric(wait_time) - as.numeric(Sys.time())
+  force(f)
+  function(...) {
+    if (delay > 0) {
+      cat('Wait', delay, 'seconds more before the function executes.\n')
+      Sys.sleep(delay)
+      print("Hurray!!! The function executed")
+    }
+    f(...)
+  }
+}
+
+time <- as.POSIXct("12:44:00", format = "%H:%M:%S")
+h <- wait_until(time, Sys.time)
+h()
+```
+
+    ## [1] "2016-06-19 15:39:12 PDT"
+
+5. There are three places we could have added a memoise call: why did we choose the one we did?
+===============================================================================================
+
+``` r
+download <- memoise(dot_every(10, delay_by(1, download_file)))
+download <- dot_every(10, memoise(delay_by(1, download_file)))
+download <- dot_every(10, delay_by(1, memoise(download_file)))
+```
+
+There is no point in using a delay\_by if you are first memoiseing all the files that you want to download, since this will simply download all the files without a delay; so the third choice is not appropriate.
+
+The first choice also seems weird since it does not account for unique downloads and only memories how many files were downloaded.
+
+6. Why is the remember() function inefficient? How could you implement it in more efficient way?
+================================================================================================
+
+The function is inefficient because it recomputed the list whenever the function was run again (the function is runtime inefficient, but it is memory efficient). A way to make it more efficient is to use pre-allocation.
+
+7. Why does the following code, from stackoverflow, not do what you expect? How can you modify f so that it works correctly?
+============================================================================================================================
+
+It's because of lazy evaluation; You need to force the parameters a,b
+
+``` r
+# return a linear function with slope a and intercept b.
+f <- function(a, b) {
+    force(a);
+    force(b);
+    function(x) {
+        a * x + b
+    }
+}
+# create a list of functions with different parameters.
+fs <- Map(f, a = c(0, 1), b = c(0, 1))
+
+fs[[1]](3)
+```
+
+    ## [1] 0
+
+``` r
+#> [1] 0
+# should return 0 * 3 + 0 = 0
+```
+
+**Set 2 Exercises**
+===================
+
+1. Create a negative() FO that flips the sign of the output of the function to which it is applied.
+===================================================================================================
+
+``` r
+negative <- function(f) {
+    force(f)
+    function(...) {
+        -f(...)
+    }
+}
+
+#test it
+negative(sum)(1:5)
+```
+
+    ## [1] -15
+
+2. The evaluate package makes it easy to capture all the outputs (results, text, messages, warnings, errors, and plots) from an expression. Create a function like capture\_it() that also captures the warnings and errors generated by a function.
+====================================================================================================================================================================================================================================================
+
+``` r
+library(evaluate)
+?evaluate
+```
+
+    ## starting httpd help server ...
+
+    ##  done
+
+``` r
+capture_it <- function(f) {
+  force(f)
+  function(...) {
+    evaluate(f(...), keep_warning = TRUE, keep_message = TRUE)
+  }
+}
+
+capture_it(log)(-1)
+```
+
+    ## Warning in f(...): NaNs produced
+
+    ## [[1]]
+    ## $src
+    ## [1] "NaN"
+    ## 
+    ## attr(,"class")
+    ## [1] "source"
+    ## 
+    ## [[2]]
+    ## [1] "[1] NaN\n"
+
+3. Create a FO that tracks files created or deleted in the working directory (Hint: use dir() and setdiff().) What other global effects of functions might you want to track?
+=============================================================================================================================================================================
+
+``` r
+folder_changes <- function(folder) {
+  files <- dir(folder)
+  function(...) {
+    new_files <- setdiff(dir(folder), files)
+    deleted_files <- setdiff(files, dir(folder))
+    cat('created = ', created, 'deleted = ', deleted, '\n' )
+  }
+}
+```
+
+One thing you might track is meta-data associated with a file, such as the author and the time when the files was modified/created.
+
+**Set 3 Exercises**
+===================
+
+1. Our previous download() function only downloads a single file. How can you use partial() and lapply() to create a function that downloads multiple files at once? What are the pros and cons of using partial() vs. writing a function by hand?
+==================================================================================================================================================================================================================================================
+
+``` r
+download_files <- function(urls, ...) {
+  lapply(urls, pryr::partial(download.file))
+}
+```
+
+My guess is that partial does not require the all arguments to be specified for the download.file function.
+
+2. Read the source code for plyr::colwise(). How does the code work? What are colwise()'s three main tasks? How could you make colwise() simpler by implementing each task as a function operator? (Hint: think about partial().)
+=================================================================================================================================================================================================================================
+
+Let's check the source code first
+
+``` r
+colwise()
+```
+
+    ## function (df, ...) 
+    ## {
+    ##     stopifnot(is.data.frame(df))
+    ##     df <- strip_splits(df)
+    ##     filtered <- filter(df)
+    ##     if (length(filtered) == 0) 
+    ##         return(data.frame())
+    ##     out <- do.call("lapply", c(list(filtered, .fun, ...), dots))
+    ##     names(out) <- names(filtered)
+    ##     quickdf(out)
+    ## }
+    ## <environment: 0x000000000aed9708>
+
+How does it work? First, it checks that you supplied a data.farme. It splits the columns and performs the operations over each column with lapply. The columns are split with strip\_splits. I'm not sure how it could be simplified. Moreover, i'm not sure what the dots reffers to.
+
+3. Write FOs that convert a function to return a matrix instead of a data frame, or a data frame instead of a matrix. If you understand S3, call them as.data.frame.function() and as.matrix.function().
+========================================================================================================================================================================================================
+
+``` r
+as.data.frame.function <- function(f){
+  function(...){
+    as.data.frame(f(...))
+  }
+}
+
+class(as.data.frame(matrix)(1:9))
+```
+
+    ## [1] "data.frame"
+
+``` r
+as.matrix.function <- function(f) {
+  function(...) {
+    as.matrix(f(...))
+  }
+}
+
+class(as.matrix.function(data.frame)(A = 1:9, B = 1:9))
+```
+
+    ## [1] "matrix"
+
+4. You've seen five functions that modify a function to change its output from one form to another. What are they? Draw a table of the various combinations of types of outputs: what should go in the rows and what should go in the columns? What function operators might you want to write to fill in the missing cells? Come up with example use cases.
+============================================================================================================================================================================================================================================================================================================================================================
+
+Vectorize, colwise, as.data.frame.function, as.matrix.function, splat
+
+5. Look at all the examples of using an anonymous function to partially apply a function in this and the previous chapter. Replace the anonymous function with partial(). What do you think of the result? Is it easier or harder to read?
+==========================================================================================================================================================================================================================================
+
+``` r
+funs2 <- list(
+  sum = partial(sum, na.rm = TRUE),
+  mean = partial(mean, na.rm = TRUE),
+  median = partial(median, na.rm = TRUE)
+)
+
+#not sure how to approach this one for now
+```
+
+**Set 4 Exercises**
+===================
+
+1. Implement your own version of compose() using Reduce and %o%. For bonus points, do it without calling function.
+==================================================================================================================
+
+``` r
+"%o%" <- compose
+compose2 <- partial(Reduce, f = `%o%`)
+
+#the answer should be 2; the right-most function is applied first
+compose2(c(sqrt,mean))(4,4,4,4)
+```
+
+    ## [1] 2
+
+``` r
+sqrt(mean(4,4,4,4))
+```
+
+    ## [1] 2
+
+``` r
+(sqrt %o% mean)(4,4,4,4)
+```
+
+    ## [1] 2
+
+2. Extend and() and or() to deal with any number of input functions. Can you do it with Reduce()? Can you keep them lazy (e.g., for and(), the function returns once it sees the first FALSE)?
+==============================================================================================================================================================================================
+
+Not sure how
+
+3. Implement the xor() binary operator. Implement it using the existing xor() function. Implement it as a combination of and() and or(). What are the advantages and disadvantages of each approach? Also think about what you'll call the resulting function to avoid a clash with the existing xor() function, and how you might change the names of and(), not(), and or() to keep them consistent.
+======================================================================================================================================================================================================================================================================================================================================================================================================
+
+``` r
+#implementing %xor% using the exis
+`%xor%` <- function(x, y) {
+    xor(x, y)
+}
+
+#the xor function evaluated to true whenever x or y are dissimilar.
+TRUE %xor% TRUE 
+```
+
+    ## [1] FALSE
+
+``` r
+TRUE %xor% FALSE
+```
+
+    ## [1] TRUE
+
+``` r
+FALSE %xor% TRUE
+```
+
+    ## [1] TRUE
+
+``` r
+FALSE %xor% FALSE
+```
+
+    ## [1] FALSE
+
+``` r
+#passes all tests
+
+
+#implementing is as a combination of x and y
+and <- function(f1, f2) {
+    f1 && f2
+}
+
+or <- function(f1, f2) {
+    f1 || f2
+}
+
+`%xor2%`  <- function(f1, f2) {
+    or(f1, f2) & !and(f1, f2)
+}
+
+#the xor function evaluated to true whenever x or y are dissimilar.
+TRUE %xor2% TRUE 
+```
+
+    ## [1] FALSE
+
+``` r
+TRUE %xor2% FALSE
+```
+
+    ## [1] TRUE
+
+``` r
+FALSE %xor2% TRUE
+```
+
+    ## [1] TRUE
+
+``` r
+FALSE %xor2% FALSE
+```
+
+    ## [1] FALSE
+
+4. Above, we implemented boolean algebra for functions that return a logical function. Implement elementary algebra (plus(), minus(), multiply(), divide(), exponentiate(), log()) for functions that return numeric vectors.
+=============================================================================================================================================================================================================================
+
+``` r
+plus <- function(f1, f2) {
+  force(f1); force(f2)
+  function(...) {
+    f1(...) + f2(...)
+  }
+}
+
+plus(mean, mean)(4,4,4,4)
+```
+
+    ## [1] 8
+
+``` r
+#minus
+minus <- function(f1, f2) {
+  force(f1); force(f2)
+  function(...) {
+    f1(...) - f2(...)
+  }
+}
+
+minus(mean, mean)(4,4,4,4)
+```
+
+    ## [1] 0
+
+``` r
+#multiply
+multiply <- function(f1, f2) {
+  force(f1); force(f2)
+  function(...) {
+    f1(...) * f2(...)
+  }
+}
+
+multiply(mean, mean)(4,4,4,4)
+```
+
+    ## [1] 16
+
+``` r
+#etc...
+```
