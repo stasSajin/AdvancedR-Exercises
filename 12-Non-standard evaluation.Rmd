@@ -268,12 +268,47 @@ My guess is that it allows you to specify the environment.
 - f(g(a, b), c) -> (a + b) * c
 - f(a < b, c, d) -> if (a < b) c else d
 
+```{r}
+subs(a + b + c, list("+" = quote(`*`)))
+subs(f(g(a, b), c), list(g = quote(`+`), f = quote(`*`)))
+subs(f(a < b, c, d), list(f = quote(`if`)))
+```
+
 #2. For each of the following pairs of expressions, describe why you can't use subs() to convert one to the other.
 - a + b + c -> a + b * c
+
+You can't specify which indices should be converted to what. For instance, you can only use subs to convert all '+' to '*'
+
+
 - f(a, b) -> f(a, b, c)
+
+You can't add new arguments with subs
+
 - f(a, b, c) -> f(a, b)
 
+You can't remove arguments with subs
+
 #3. How does pryr::named_dots() work? Read the source.
+
+```{r}
+named_dots
+```
+
+It first passes all the arguments through dots. Let's see what dots does:
+
+```{r}
+dots
+```
+
+Ok, so the dots will just provide a list of all the arguments and their values. 
+
+```{r}
+#Example:
+dots(x=5,y=6)
+```
+
+Then from the list we extract all the names for each argument. If all the args are "", it simply returns the args.  Otherwise, it names the args with their values, and returns the re-named list of args.
+
 
 #Set 6 Exercises
 #1. What does the following function do? What's the escape hatch? Do you think that this is an appropriate use of NSE?
