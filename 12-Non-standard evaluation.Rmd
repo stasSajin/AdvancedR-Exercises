@@ -141,7 +141,7 @@ subset3(sample_df2, x > 8)
 
 # 4.  What happens if you use quote() instead of substitute() inside of subset2()?
 
-```{r}
+```{r, eval=FALSE}
 subset3 <- function(x, condition) {
   condition_call <- quote(condition)
   r <- eval(condition_call, x)
