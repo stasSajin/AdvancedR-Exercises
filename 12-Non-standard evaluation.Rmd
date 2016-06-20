@@ -173,27 +173,60 @@ var_pos creates a list with the variable name and the column index in the df for
 evalq() is the same as eval(quote())
 
 ```{r}
-
+evalq(evalq(evalq(2 + 2)))
+#4
+eval(evalq(evalq(evalq(2 + 2))))
+#eval(quote(eval(quote(eval(quote(2 + 2)))))) ; quote takes the literal
+quote(evalq(evalq(evalq(2 + 2))))
 ```
-
 
 
 #Set 3 Exercises
 
 #1. plyr::arrange() works similarly to subset(), but instead of selecting rows, it reorders them. How does it work? What does substitute(order(...)) do? Create a function that does only that and experiment with it.
 
+```{r}
+arrange
+```
+
+
+```{r}
+ord <- function(df, ...) {
+  eval(substitute(order(...)), df, parent.frame())
+}
+
+ord(mtcars, cyl, disp)
+
+#note that the ouput will be a randking for each row in the dataset based on the order of cyl and disp; for examplem rank 1 corresponds to the 15 index (ie, row) in the dataset. Note that 15th row has 8 cyl and highest disp, hence rank 1.
+```
+
+
 #2. What does transform() do? Read the documentation. How does it work? Read the source code for transform.data.frame(). What does substitute(list(...)) do?
+
+```{r}
+#?transform
+```
+it allows us to make modifications to the dataframe. For instance, you can see in the documentation examples that it allows us to change the values of the columns and create new colums. 
+
 
 #3, plyr::mutate() is similar to transform() but it applies the transformations sequentially so that transformation can refer to columns that were just created:
 
 ```{r}
 df <- data.frame(x = 1:5)
-transform(df, x2 = x * x, x3 = x2 * x)
+#transform(df, x2 = x * x, x3 = x2 * x) this will throw an error
+#Error in eval(expr, envir, enclos) : object 'x2' not found
+
 plyr::mutate(df, x2 = x * x, x3 = x2 * x)
 ```
 How does mutate work? What's the key difference between mutate() and transform()?
 
+Transform does not allow you to reffer back to previously specified arguments. For instance, notice that it throws and error for x2 not found. That's because it has not stored the variable x2 in the dataframe when it has evaluated it. On the other hand, the mutate function proceeds more sequantially. It evaluates the new transformaiton, stores it in the df, and then proceeds to the next transformation. Mutate thus allows one to reffer back to arguments that have been already evaluated. 
+
 #4. What does with() do? How does it work? Read the source code for with.default(). What does within() do? How does it work? Read the source code for within.data.frame(). Why is the code so much more complex than with()?
+ 
+from help: `with` evaluates an R expression within an environment created from data; `with.default` is just a wrapper for the standard `eval(substitute())`
+**I'll answer other parts of the question later.**
+
 
 #Set 4 Exercises
 #1. The following R functions all use NSE. For each, describe how it uses NSE, and read the documentation to determine its escape hatch.
